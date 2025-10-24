@@ -9,14 +9,13 @@ Tests cover:
 """
 
 import numpy as np
-
 from django.test import TestCase, TransactionTestCase
 from django.urls import reverse
-from rest_framework.test import APITestCase
 from rest_framework import status
+from rest_framework.test import APITestCase
 
-from search_api.models import Document, QueryRelevance, Query
 from search_api.embedding_service import EmbeddingService
+from search_api.models import Document, Query, QueryRelevance
 from search_api.search_service import SearchService
 
 

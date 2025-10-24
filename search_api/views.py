@@ -6,12 +6,8 @@ from rest_framework.views import APIView
 
 from .models import Document, QueryRelevance
 from .search_service import SearchService
-from .serializers import (
-    ErrorResponseSerializer,
-    QueryRequestSerializer,
-    QueryResponseSerializer,
-    StatusResponseSerializer,
-)
+from .serializers import (ErrorResponseSerializer, QueryRequestSerializer,
+                          QueryResponseSerializer, StatusResponseSerializer)
 
 logger = logging.getLogger(__name__)
 
