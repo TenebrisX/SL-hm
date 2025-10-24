@@ -131,7 +131,7 @@ jobs:
 
       - name: Test Docker image
         run: |
-          docker run -d --name test-api -p 8000:8000 search-engine-api:test
+          docker run -d --name test-api --memory="4g" --memory-swap="4g" -p 8000:8000 search-engine-api:test
           sleep 10
           docker exec test-api python manage.py migrate
           curl -f http://localhost:8000/api/health/ || exit 1
