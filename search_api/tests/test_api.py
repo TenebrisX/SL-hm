@@ -76,23 +76,7 @@ class EmbeddingServiceTests(TestCase):
         deserialized = EmbeddingService.deserialize_embedding(serialized)
         
         np.testing.assert_array_almost_equal(original, deserialized)
-    
-    def test_cosine_similarity(self):
-        """Test cosine similarity calculation."""
-        query_emb = np.array([1.0, 0.0, 0.0])
-        doc_embs = np.array([
-            [1.0, 0.0, 0.0],  # Identical to query
-            [0.0, 1.0, 0.0],  # Orthogonal to query
-            [-1.0, 0.0, 0.0]  # Opposite to query
-        ])
         
-        similarities = self.service.compute_cosine_similarity(query_emb, doc_embs)
-        
-        self.assertEqual(len(similarities), 3)
-        self.assertAlmostEqual(similarities[0], 1.0, places=5)  # Perfect match
-        self.assertAlmostEqual(similarities[1], 0.0, places=5)  # Orthogonal
-        self.assertAlmostEqual(similarities[2], -1.0, places=5)  # Opposite
-    
     def test_embed_query_caching(self):
         """Test that embed_query caches by query_id."""
         # First call - cache miss

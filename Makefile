@@ -37,7 +37,7 @@ migrate:
 	python manage.py migrate
 
 index:
-	python manage.py index_documents --clear
+	python manage.py init --clear
 
 test:
 	python manage.py test

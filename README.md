@@ -84,7 +84,7 @@ make migrate
 
 # Index documents (this may take a few minutes)
 make index
-# Or: python manage.py index_documents --clear
+# Or: python manage.py init --clear
 ```
 
 #### 4. Run the Server
@@ -104,6 +104,7 @@ make run
 # Clone repository
 git clone https://github.com/TenebrisX/SL-hm.git
 cd SL-hm
+make download-data
 
 # Start services  & build image
 docker-compose up -d

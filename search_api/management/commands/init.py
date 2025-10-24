@@ -3,11 +3,13 @@ Django management command to index documents from the dataset.
 
 Usage:
     python manage.py init
+    python manage.py init --docs-file custom.docs
+    python manage.py init --clear
 
 This command:
-1. Loads documents from train.docs
-2. Loads queries from train.titles.queries
-3. Loads qrels from train.3-2-1.qrel
+1. Loads documents from train.docs (or specified file)
+2. Loads queries from train.titles.queries (or specified file)
+3. Loads qrels from train.3-2-1.qrel (or specified file)
 4. Generates embeddings for all documents
 5. Stores everything in the database
 """
@@ -43,6 +45,24 @@ class Command(BaseCommand):
             help='Path to the dataset directory'
         )
         parser.add_argument(
+            '--docs-file',
+            type=str,
+            default='train.docs',
+            help='Name of the documents file (default: train.docs)'
+        )
+        parser.add_argument(
+            '--queries-file',
+            type=str,
+            default='train.titles.queries',
+            help='Name of the queries file (default: train.titles.queries)'
+        )
+        parser.add_argument(
+            '--qrels-file',
+            type=str,
+            default='train.3-2-1.qrel',
+            help='Name of the qrels file (default: train.3-2-1.qrel)'
+        )
+        parser.add_argument(
             '--batch-size',
             type=int,
             default=100,
@@ -57,6 +77,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """Execute the command."""
         data_path = options['data_path']
+        docs_file = options['docs_file']
+        queries_file = options['queries_file']
+        qrels_file = options['qrels_file']
         batch_size = options['batch_size']
         clear_data = options['clear']
         
@@ -80,8 +103,8 @@ class Command(BaseCommand):
         try:
             # Step 1: Load and index documents
             self.stdout.write('Step 1: Loading documents...')
-            docs = self.load_documents(data_path)
-            self.stdout.write(f'Loaded {len(docs)} documents')
+            docs = self.load_documents(data_path, docs_file)
+            self.stdout.write(f'Loaded {len(docs)} documents from {docs_file}')
             
             self.stdout.write('Step 2: Generating embeddings...')
             self.index_documents(docs, batch_size)
@@ -91,18 +114,18 @@ class Command(BaseCommand):
             
             # Step 2: Load queries
             self.stdout.write('Step 3: Loading queries...')
-            queries = self.load_queries(data_path)
+            queries = self.load_queries(data_path, queries_file)
             self.save_queries(queries)
             self.stdout.write(self.style.SUCCESS(
-                f'Loaded {len(queries)} queries'
+                f'Loaded {len(queries)} queries from {queries_file}'
             ))
             
             # Step 3: Load qrels
             self.stdout.write('Step 4: Loading qrels...')
-            qrels = self.load_qrels(data_path)
+            qrels = self.load_qrels(data_path, qrels_file)
             self.save_qrels(qrels)
             self.stdout.write(self.style.SUCCESS(
-                f'Loaded {len(qrels)} query-document relevance judgments'
+                f'Loaded {len(qrels)} relevance judgments from {qrels_file}'
             ))
             
             # Summary
@@ -115,38 +138,40 @@ class Command(BaseCommand):
             logger.error(f'Indexing failed: {e}', exc_info=True)
             raise CommandError(f'Indexing failed: {e}')
     
-    def load_documents(self, data_path: str) -> List[Tuple[str, str]]:
+    def load_documents(self, data_path: str, filename: str) -> List[Tuple[str, str]]:
         """
-        Load documents from train.docs file.
+        Load documents from file.
         
         Format: Each line is a document with format "doc_id\tdocument_text"
         
+        Args:
+            data_path: Directory containing the file
+            filename: Name of the documents file
+            
         Returns:
             List of (doc_id, text) tuples
         """
-        docs_file = os.path.join(data_path, 'train.docs')
+        filepath = os.path.join(data_path, filename)
         
-        if not os.path.exists(docs_file):
-            raise CommandError(f"Documents file not found: {docs_file}")
+        if not os.path.exists(filepath):
+            raise CommandError(f"Documents file not found: {filepath}")
         
         documents = []
-        with open(docs_file, 'r', encoding='utf-8') as f:
+        with open(filepath, 'r', encoding='utf-8') as f:
             for line_num, line in enumerate(f, 1):
                 line = line.strip()
                 if not line:
                     continue
                 
-                # Split on first tab
                 parts = line.split('\t', 1)
                 if len(parts) != 2:
                     logger.warning(
-                        f"Skipping malformed line {line_num} in train.docs"
+                        f"Skipping malformed line {line_num} in {filename}"
                     )
                     continue
                 
                 doc_id, text = parts
                 
-                # Skip empty documents
                 if not text or not text.strip():
                     logger.warning(f"Skipping empty document: {doc_id}")
                     continue
@@ -170,21 +195,18 @@ class Command(BaseCommand):
             batch = documents[i:i + batch_size]
             batch_num = i // batch_size + 1
             
-            # Extract texts and IDs
             doc_ids = [doc_id for doc_id, _ in batch]
             texts = [text for _, text in batch]
             
-            # Progress update
             progress = (batch_num / total_batches) * 100
             self.stdout.write(
-                f'Processing batch {batch_num}/{total_batches} ({progress:.1f}%)...'
+                f'Processing batch {batch_num}/{total_batches} ({progress:.1f}%) '
+                f'[{doc_ids[0]} ... {doc_ids[-1]}]'
             )
             
             try:
-                # Generate embeddings for batch
                 embeddings = self.embedding_service.embed_batch(texts)
                 
-                # Save to database
                 with transaction.atomic():
                     for j, (doc_id, text) in enumerate(batch):
                         embedding_str = self.embedding_service.serialize_embedding(
@@ -208,22 +230,26 @@ class Command(BaseCommand):
                 )
                 raise
     
-    def load_queries(self, data_path: str) -> List[Tuple[str, str]]:
+    def load_queries(self, data_path: str, filename: str) -> List[Tuple[str, str]]:
         """
-        Load queries from train.titles.queries file.
+        Load queries from file.
         
         Format: Each line is "query_id\tquery_text"
         
+        Args:
+            data_path: Directory containing the file
+            filename: Name of the queries file
+            
         Returns:
             List of (query_id, query_text) tuples
         """
-        queries_file = os.path.join(data_path, 'train.titles.queries')
+        filepath = os.path.join(data_path, filename)
         
-        if not os.path.exists(queries_file):
-            raise CommandError(f"Queries file not found: {queries_file}")
+        if not os.path.exists(filepath):
+            raise CommandError(f"Queries file not found: {filepath}")
         
         queries = []
-        with open(queries_file, 'r', encoding='utf-8') as f:
+        with open(filepath, 'r', encoding='utf-8') as f:
             for line_num, line in enumerate(f, 1):
                 line = line.strip()
                 if not line:
@@ -232,7 +258,7 @@ class Command(BaseCommand):
                 parts = line.split('\t', 1)
                 if len(parts) != 2:
                     logger.warning(
-                        f"Skipping malformed line {line_num} in train.titles.queries"
+                        f"Skipping malformed line {line_num} in {filename}"
                     )
                     continue
                 
@@ -250,22 +276,26 @@ class Command(BaseCommand):
                     defaults={'query_text': query_text}
                 )
     
-    def load_qrels(self, data_path: str) -> List[Tuple[str, str, int]]:
+    def load_qrels(self, data_path: str, filename: str) -> List[Tuple[str, str, int]]:
         """
-        Load query relevance judgments from train.3-2-1.qrel file.
+        Load query relevance judgments from file.
         
         Format: "query_id\tdoc_id\tunused\trelevance_score"
         
+        Args:
+            data_path: Directory containing the file
+            filename: Name of the qrels file
+            
         Returns:
             List of (query_id, doc_id, relevance_score) tuples
         """
-        qrels_file = os.path.join(data_path, 'train.3-2-1.qrel')
+        filepath = os.path.join(data_path, filename)
         
-        if not os.path.exists(qrels_file):
-            raise CommandError(f"Qrels file not found: {qrels_file}")
+        if not os.path.exists(filepath):
+            raise CommandError(f"Qrels file not found: {filepath}")
         
         qrels = []
-        with open(qrels_file, 'r', encoding='utf-8') as f:
+        with open(filepath, 'r', encoding='utf-8') as f:
             for line_num, line in enumerate(f, 1):
                 line = line.strip()
                 if not line:
@@ -274,7 +304,7 @@ class Command(BaseCommand):
                 parts = line.split('\t')
                 if len(parts) < 4:
                     logger.warning(
-                        f"Skipping malformed line {line_num} in train.3-2-1.qrel"
+                        f"Skipping malformed line {line_num} in {filename}"
                     )
                     continue
                 

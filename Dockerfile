@@ -32,4 +32,4 @@ ENV PYTHONUNBUFFERED=1
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:8000/api/health/ || exit 1
 
-CMD ["sh", "-c", "python manage.py migrate && python manage.py index_documents --clear && python manage.py runserver 0.0.0.0:8000"]
+CMD ["sh", "-c", "python manage.py migrate && python manage.py init --clear && python manage.py runserver 0.0.0.0:8000"]
