@@ -1,5 +1,3 @@
-# Multi-stage Dockerfile for the search engine API
-
 FROM python:3.11-slim as builder
 
 WORKDIR /app
