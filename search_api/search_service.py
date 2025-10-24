@@ -15,9 +15,7 @@ class SearchService:
     def __init__(self):
         self.embedding_service = EmbeddingService()
 
-    def search(
-        self, query_text: str, query_id: str = None, top_k: int = 10
-    ) -> Tuple[List[str], Dict[str, float]]:
+    def search(self, query_text: str, query_id: str = None, top_k: int = 10) -> Tuple[List[str], Dict[str, float]]:
         """
         Search for documents similar to the query.
 
@@ -50,9 +48,7 @@ class SearchService:
 
         doc_embeddings = np.array(doc_embeddings)
 
-        similarities = self.embedding_service.compute_cosine_similarity(
-            query_embedding, doc_embeddings
-        )
+        similarities = self.embedding_service.compute_cosine_similarity(query_embedding, doc_embeddings)
 
         top_indices = np.argsort(similarities)[::-1][:top_k]
         top_doc_ids = [doc_ids[i] for i in top_indices]
@@ -65,19 +61,13 @@ class SearchService:
 
         return top_doc_ids, metadata
 
-    def calculate_precision_at_k(
-        self, query_id: str, retrieved_docs: List[str], k: int = 5
-    ) -> float:
+    def calculate_precision_at_k(self, query_id: str, retrieved_docs: List[str], k: int = 5) -> float:
         """Calculate Precision@K for a query."""
         if not query_id:
             logger.warning("No query_id provided for P@K calculation")
             return 0.0
 
-        relevant_docs = set(
-            QueryRelevance.objects.filter(query_id=query_id).values_list(
-                "doc_id", flat=True
-            )
-        )
+        relevant_docs = set(QueryRelevance.objects.filter(query_id=query_id).values_list("doc_id", flat=True))
 
         if not relevant_docs:
             logger.warning(f"No relevant documents found for query_id: {query_id}")
@@ -88,9 +78,7 @@ class SearchService:
 
         return relevant_retrieved / k if k > 0 else 0.0
 
-    def search_and_evaluate(
-        self, query_text: str, query_id: str, top_k: int = 10
-    ) -> Dict:
+    def search_and_evaluate(self, query_text: str, query_id: str, top_k: int = 10) -> Dict:
         """Perform search and calculate evaluation metrics."""
         top_docs, metadata = self.search(query_text, query_id, top_k)
         p5 = self.calculate_precision_at_k(query_id, top_docs, k=5)
@@ -104,11 +92,7 @@ class SearchService:
 
     def get_relevant_docs(self, query_id: str) -> List[str]:
         """Get all relevant documents for a query from qrels."""
-        return list(
-            QueryRelevance.objects.filter(query_id=query_id).values_list(
-                "doc_id", flat=True
-            )
-        )
+        return list(QueryRelevance.objects.filter(query_id=query_id).values_list("doc_id", flat=True))
 
     def get_cache_statistics(self) -> Dict:
         """Get embedding cache statistics."""

@@ -8,12 +8,8 @@ class StatusResponseSerializer(serializers.Serializer):
     Returns information about indexed documents and queries.
     """
 
-    num_of_indexed_items = serializers.IntegerField(
-        help_text="Number of documents indexed in the system"
-    )
-    num_of_queries_in_qrels = serializers.IntegerField(
-        help_text="Number of unique queries in the relevance judgments"
-    )
+    num_of_indexed_items = serializers.IntegerField(help_text="Number of documents indexed in the system")
+    num_of_queries_in_qrels = serializers.IntegerField(help_text="Number of unique queries in the relevance judgments")
 
 
 class QueryRequestSerializer(serializers.Serializer):
@@ -67,6 +63,4 @@ class ErrorResponseSerializer(serializers.Serializer):
     """
 
     error = serializers.CharField(help_text="Error message")
-    details = serializers.DictField(
-        required=False, help_text="Additional error details"
-    )
+    details = serializers.DictField(required=False, help_text="Additional error details")

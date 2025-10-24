@@ -125,9 +125,7 @@ class EmbeddingService:
         try:
             tokenizer = self._model.tokenizer
         except AttributeError:
-            raise RuntimeError(
-                "The model does not expose a tokenizer for token-level truncation."
-            )
+            raise RuntimeError("The model does not expose a tokenizer for token-level truncation.")
 
         truncated_texts = []
         num_truncated = 0
@@ -143,9 +141,7 @@ class EmbeddingService:
             truncated_texts.append(truncated_text)
 
         if num_truncated:
-            logger.warning(
-                f"Truncated {num_truncated} texts exceeding {max_length} tokens."
-            )
+            logger.warning(f"Truncated {num_truncated} texts exceeding {max_length} tokens.")
 
         try:
             embeddings = self._model.encode(
@@ -159,9 +155,7 @@ class EmbeddingService:
             logger.error(f"Failed to embed batch of {len(valid_texts)} texts: {e}")
             raise
 
-    def compute_cosine_similarity(
-        self, query_embedding: np.ndarray, doc_embeddings: np.ndarray
-    ) -> np.ndarray:
+    def compute_cosine_similarity(self, query_embedding: np.ndarray, doc_embeddings: np.ndarray) -> np.ndarray:
         """
         Compute cosine similarity between query and document embeddings.
 
@@ -190,9 +184,7 @@ class EmbeddingService:
             "size": cache_info.currsize,
             "maxsize": cache_info.maxsize,
             "hit_rate": (
-                cache_info.hits / (cache_info.hits + cache_info.misses)
-                if (cache_info.hits + cache_info.misses) > 0
-                else 0
+                cache_info.hits / (cache_info.hits + cache_info.misses) if (cache_info.hits + cache_info.misses) > 0 else 0
             ),
         }
 

@@ -49,9 +49,7 @@ class QueryRelevance(models.Model):
         ]
 
     def __str__(self):
-        return (
-            f"QueryRel({self.query_id} -> {self.doc_id}, score={self.relevance_score})"
-        )
+        return f"QueryRel({self.query_id} -> {self.doc_id}, score={self.relevance_score})"
 
 
 class Query(models.Model):

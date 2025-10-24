@@ -6,8 +6,12 @@ from rest_framework.views import APIView
 
 from .models import Document, QueryRelevance
 from .search_service import SearchService
-from .serializers import (ErrorResponseSerializer, QueryRequestSerializer,
-                          QueryResponseSerializer, StatusResponseSerializer)
+from .serializers import (
+    ErrorResponseSerializer,
+    QueryRequestSerializer,
+    QueryResponseSerializer,
+    StatusResponseSerializer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -51,9 +55,7 @@ class StatusView(APIView):
 
         except Exception as e:
             logger.error(f"Error in StatusView: {e}", exc_info=True)
-            error_serializer = ErrorResponseSerializer(
-                data={"error": "Internal server error", "details": {"message": str(e)}}
-            )
+            error_serializer = ErrorResponseSerializer(data={"error": "Internal server error", "details": {"message": str(e)}})
             error_serializer.is_valid()
             return Response(
                 error_serializer.validated_data,
@@ -112,9 +114,7 @@ class QueryView(APIView):
                     status=status.HTTP_503_SERVICE_UNAVAILABLE,
                 )
 
-            result = self.search_service.search_and_evaluate(
-                query_text=query_text, query_id=query_id, top_k=10
-            )
+            result = self.search_service.search_and_evaluate(query_text=query_text, query_id=query_id, top_k=10)
 
             response_data = {"top_docs": result["top_docs"], "p5": result["p5"]}
 

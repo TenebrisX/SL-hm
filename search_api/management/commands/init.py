@@ -69,9 +69,7 @@ class Command(BaseCommand):
             default=100,
             help="Batch size for embedding generation",
         )
-        parser.add_argument(
-            "--clear", action="store_true", help="Clear existing data before indexing"
-        )
+        parser.add_argument("--clear", action="store_true", help="Clear existing data before indexing")
 
     def handle(self, *args, **options):
         """Execute the command."""
@@ -87,8 +85,7 @@ class Command(BaseCommand):
         # Verify data directory exists
         if not os.path.exists(data_path):
             raise CommandError(
-                f"Data directory not found: {data_path}\n"
-                f"Please download and extract the dataset to this location."
+                f"Data directory not found: {data_path}\n" f"Please download and extract the dataset to this location."
             )
 
         # Clear existing data if requested
@@ -113,19 +110,13 @@ class Command(BaseCommand):
             self.stdout.write("Step 3: Loading queries...")
             queries = self.load_queries(data_path, queries_file)
             self.save_queries(queries)
-            self.stdout.write(
-                self.style.SUCCESS(f"Loaded {len(queries)} queries from {queries_file}")
-            )
+            self.stdout.write(self.style.SUCCESS(f"Loaded {len(queries)} queries from {queries_file}"))
 
             # Step 3: Load qrels
             self.stdout.write("Step 4: Loading qrels...")
             qrels = self.load_qrels(data_path, qrels_file)
             self.save_qrels(qrels)
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"Loaded {len(qrels)} relevance judgments from {qrels_file}"
-                )
-            )
+            self.stdout.write(self.style.SUCCESS(f"Loaded {len(qrels)} relevance judgments from {qrels_file}"))
 
             # Summary
             self.stdout.write(self.style.SUCCESS("\n=== Indexing Complete ==="))
@@ -189,7 +180,7 @@ class Command(BaseCommand):
         total_batches = (total + batch_size - 1) // batch_size
 
         for i in range(0, total, batch_size):
-            batch = documents[i: i + batch_size]
+            batch = documents[i : i + batch_size]
             batch_num = i // batch_size + 1
 
             doc_ids = [doc_id for doc_id, _ in batch]
@@ -197,8 +188,7 @@ class Command(BaseCommand):
 
             progress = (batch_num / total_batches) * 100
             self.stdout.write(
-                f"Processing batch {batch_num}/{total_batches} ({progress:.1f}%) "
-                f"[{doc_ids[0]} ... {doc_ids[-1]}]"
+                f"Processing batch {batch_num}/{total_batches} ({progress:.1f}%) " f"[{doc_ids[0]} ... {doc_ids[-1]}]"
             )
 
             try:
@@ -206,9 +196,7 @@ class Command(BaseCommand):
 
                 with transaction.atomic():
                     for j, (doc_id, text) in enumerate(batch):
-                        embedding_str = self.embedding_service.serialize_embedding(
-                            embeddings[j]
-                        )
+                        embedding_str = self.embedding_service.serialize_embedding(embeddings[j])
 
                         Document.objects.update_or_create(
                             doc_id=doc_id,
@@ -219,9 +207,7 @@ class Command(BaseCommand):
 
             except Exception as e:
                 logger.error(f"Failed to process batch {batch_num}: {e}", exc_info=True)
-                self.stdout.write(
-                    self.style.ERROR(f"✗ Failed to process batch {batch_num}: {e}")
-                )
+                self.stdout.write(self.style.ERROR(f"✗ Failed to process batch {batch_num}: {e}"))
                 raise
 
     def load_queries(self, data_path: str, filename: str) -> List[Tuple[str, str]]:
@@ -263,9 +249,7 @@ class Command(BaseCommand):
         """Save queries to database."""
         with transaction.atomic():
             for query_id, query_text in queries:
-                Query.objects.update_or_create(
-                    query_id=query_id, defaults={"query_text": query_text}
-                )
+                Query.objects.update_or_create(query_id=query_id, defaults={"query_text": query_text})
 
     def load_qrels(self, data_path: str, filename: str) -> List[Tuple[str, str, int]]:
         """

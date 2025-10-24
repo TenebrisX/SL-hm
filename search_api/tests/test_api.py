@@ -161,18 +161,14 @@ class ModelTests(TransactionTestCase):
         embedding = np.array([0.1, 0.2, 0.3])
         embedding_str = EmbeddingService.serialize_embedding(embedding)
 
-        doc = Document.objects.create(
-            doc_id="MED-1", text="This is a test document", embedding=embedding_str
-        )
+        doc = Document.objects.create(doc_id="MED-1", text="This is a test document", embedding=embedding_str)
 
         self.assertEqual(doc.doc_id, "MED-1")
         self.assertEqual(doc.text, "This is a test document")
 
     def test_create_query_relevance(self):
         """Test creating QueryRelevance."""
-        qrel = QueryRelevance.objects.create(
-            query_id="PLAIN-1", doc_id="MED-1", relevance_score=2
-        )
+        qrel = QueryRelevance.objects.create(query_id="PLAIN-1", doc_id="MED-1", relevance_score=2)
 
         self.assertEqual(qrel.query_id, "PLAIN-1")
         self.assertEqual(qrel.doc_id, "MED-1")
@@ -206,9 +202,7 @@ class SearchServiceTests(TransactionTestCase):
             embedding = self.embedding_service.embed_text(text)
             embedding_str = self.embedding_service.serialize_embedding(embedding)
 
-            Document.objects.create(
-                doc_id=f"MED-{i+1}", text=text, embedding=embedding_str
-            )
+            Document.objects.create(doc_id=f"MED-{i+1}", text=text, embedding=embedding_str)
 
     def test_search_returns_results(self):
         """Test that search returns results."""
@@ -221,14 +215,10 @@ class SearchServiceTests(TransactionTestCase):
     def test_search_with_query_id(self):
         """Test search with query_id for caching."""
         # First search
-        top_docs1, metadata1 = self.service.search(
-            query_text="heart disease", query_id="Q1", top_k=3
-        )
+        top_docs1, metadata1 = self.service.search(query_text="heart disease", query_id="Q1", top_k=3)
 
         # Second search with same query_id (should use cache)
-        top_docs2, metadata2 = self.service.search(
-            query_text="heart disease", query_id="Q1", top_k=3
-        )
+        top_docs2, metadata2 = self.service.search(query_text="heart disease", query_id="Q1", top_k=3)
 
         # Results should be identical
         self.assertEqual(top_docs1, top_docs2)
@@ -248,12 +238,8 @@ class SearchServiceTests(TransactionTestCase):
     def test_calculate_precision_at_k(self):
         """Test P@K calculation."""
         # Create qrels
-        QueryRelevance.objects.create(
-            query_id="TEST-1", doc_id="MED-1", relevance_score=2
-        )
-        QueryRelevance.objects.create(
-            query_id="TEST-1", doc_id="MED-2", relevance_score=1
-        )
+        QueryRelevance.objects.create(query_id="TEST-1", doc_id="MED-1", relevance_score=2)
+        QueryRelevance.objects.create(query_id="TEST-1", doc_id="MED-2", relevance_score=1)
 
         # Retrieved docs: 2 relevant in top 5
         retrieved = ["MED-1", "MED-3", "MED-2", "MED-4", "MED-5"]
@@ -272,13 +258,9 @@ class SearchServiceTests(TransactionTestCase):
     def test_search_and_evaluate(self):
         """Test search_and_evaluate method."""
         # Create qrels
-        QueryRelevance.objects.create(
-            query_id="TEST-1", doc_id="MED-1", relevance_score=2
-        )
+        QueryRelevance.objects.create(query_id="TEST-1", doc_id="MED-1", relevance_score=2)
 
-        result = self.service.search_and_evaluate(
-            query_text="heart disease", query_id="TEST-1", top_k=3
-        )
+        result = self.service.search_and_evaluate(query_text="heart disease", query_id="TEST-1", top_k=3)
 
         self.assertIn("top_docs", result)
         self.assertIn("p5", result)
@@ -325,15 +307,11 @@ class StatusAPITests(APITestCase):
             embedding = embedding_service.embed_text(f"test doc {i}")
             embedding_str = embedding_service.serialize_embedding(embedding)
 
-            Document.objects.create(
-                doc_id=f"MED-{i+1}", text=f"test document {i}", embedding=embedding_str
-            )
+            Document.objects.create(doc_id=f"MED-{i+1}", text=f"test document {i}", embedding=embedding_str)
 
         # Create test qrels
         for i in range(3):
-            QueryRelevance.objects.create(
-                query_id=f"PLAIN-{i+1}", doc_id=f"MED-{i+1}", relevance_score=2
-            )
+            QueryRelevance.objects.create(query_id=f"PLAIN-{i+1}", doc_id=f"MED-{i+1}", relevance_score=2)
 
     def test_status_endpoint(self):
         """Test the /status/ endpoint."""
@@ -362,14 +340,10 @@ class QueryAPITests(APITestCase):
             embedding = embedding_service.embed_text(text)
             embedding_str = embedding_service.serialize_embedding(embedding)
 
-            Document.objects.create(
-                doc_id=f"MED-{i+1}", text=text, embedding=embedding_str
-            )
+            Document.objects.create(doc_id=f"MED-{i+1}", text=text, embedding=embedding_str)
 
         # Create qrels
-        QueryRelevance.objects.create(
-            query_id="PLAIN-1", doc_id="MED-1", relevance_score=2
-        )
+        QueryRelevance.objects.create(query_id="PLAIN-1", doc_id="MED-1", relevance_score=2)
 
     def test_query_endpoint_success(self):
         """Test successful query."""
