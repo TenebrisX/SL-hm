@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, search-engine-implementation, [linting]]
+    branches: [main, search-engine-implementation, linting]
   pull_request:
     branches: [main, search-engine-implementation]
 
