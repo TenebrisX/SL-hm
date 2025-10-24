@@ -189,7 +189,7 @@ class Command(BaseCommand):
         total_batches = (total + batch_size - 1) // batch_size
 
         for i in range(0, total, batch_size):
-            batch = documents[i : i + batch_size]
+            batch = documents[i: i + batch_size]
             batch_num = i // batch_size + 1
 
             doc_ids = [doc_id for doc_id, _ in batch]
