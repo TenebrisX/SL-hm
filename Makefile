@@ -1,4 +1,4 @@
-.PHONY: download-data clean-data setup help
+.PHONY: download-data clean-data migrate index test run setup lint format fix-lint help
 
 DATA_DIR = data
 DATASET_URL = https://www.cl.uni-heidelberg.de/statnlpgroup/nfcorpus/nfcorpus.tar.gz
@@ -12,6 +12,9 @@ help:
 	@echo "  make test           - Run tests"
 	@echo "  make run            - Run development server"
 	@echo "  make setup          - Full setup (download + index)"
+	@echo "  make lint           - Run code linting"
+	@echo "  make format         - Format code using black and isort"
+	@echo "  make fix-lint       - Automatically fix common linting issues"
 	@echo "  make help           - Show this help"
 
 download-data:
@@ -37,7 +40,7 @@ migrate:
 	python manage.py migrate
 
 index:
-	python manage.py index_documents --clear
+	python manage.py init --clear
 
 test:
 	python manage.py test
@@ -47,3 +50,19 @@ run:
 
 setup: download-data clean-data migrate index
 	@echo "Setup completed successfully! Run 'make run' to start the server."
+
+lint:
+	@echo "Running flake8..."
+	@flake8 . --count --show-source --statistics
+
+format:
+	@echo "Formatting code..."
+	@black .
+	@isort .
+	@echo "Code formatted!"
+
+fix-lint: format
+	@echo "Fixing common linting issues..."
+	@autopep8 --in-place --aggressive --aggressive -r .
+	@find . -name "*.py" -exec sed -i 's/[[:space:]]*$//' {} +
+	@echo "Run 'make lint' to check remaining issues"
